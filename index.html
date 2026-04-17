@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowState | PromptWars Physical Event Experience</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root {
+            --neon-cyan: #22d3ee;
+            --neon-red: #ef4444;
+            --neon-amber: #f59e0b;
+            --bg-dark: #020617;
+            --panel-dark: #0f172a;
+        }
+
+        body { margin: 0; background: var(--bg-dark); color: white; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        #map { flex: 3; filter: brightness(0.6) contrast(1.2); cursor: crosshair; }
+
+        /* Sidebar Panel */
+        #panel { flex: 1.2; padding: 25px; background: var(--panel-dark); border-left: 1px solid #1e293b; display: flex; flex-direction: column; min-width: 400px; overflow-y: auto; }
+
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .live-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; letter-spacing: 1px; color: var(--neon-cyan); }
+        .dot { width: 8px; height: 8px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); animation: blink 1.5s infinite; }
+        
+        h2 { margin: 0; font-size: 1.2rem; letter-spacing: 2px; }
+
+        /* Feature Cards */
+        .card { 
+            background: #1e293b; 
+            padding: 15px 20px; 
+            border-radius: 10px; 
+            border-left: 4px solid var(--neon-cyan); 
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .card-header { font-size: 0.7rem; color: #94a3b8; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        
+        /* Specific Feature Styling */
+        .staff-dispatch { border-left-color: var(--neon-amber); background: #2a200a; }
+        .attendee-heat { border-left-color: #10b981; }
+        
+        .count-val { font-size: 2.5rem; font-weight: 800; color: var(--neon-cyan); font-family: monospace; }
+        .instruction { font-size: 0.9rem; color: #e2e8f0; line-height: 1.4; margin-top: 10px; min-height: 40px; }
+        
+        /* Queue Progress Bar */
+        .wait-container { margin-top: 10px; }
+        .bar-bg { background: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .bar-fill { height: 100%; background: var(--neon-cyan); transition: width 0.5s ease; }
+
+        /* Status Colors */
+        .card.alert { border-left-color: var(--neon-red); }
+        .alert .count-val { color: var(--neon-red); }
+        .alert .bar-fill { background: var(--neon-red); }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .footer { margin-top: auto; font-size: 10px; color: #475569; border-top: 1px solid #1e293b; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="panel">
+        <div class="header">
+            <h2>FLOWSTATE: CORE</h2>
+            <div class="live-indicator"><div class="dot" id="led"></div> LIVE FEED</div>
+        </div>
+
+        <div id="scan-card" class="card">
+            <div class="card-header">CV SECTOR ANALYSIS <span id="sector-id">READY</span></div>
+            <div class="count-val" id="count-num">00</div>
+            <div style="font-size: 0.7rem; color: #64748b;">TOTAL OBJECTS DETECTED</div>
+        </div>
+
+        <div class="card staff-dispatch" id="staff-card">
+            <div class="card-header">STAFF DISPATCH: TACTICAL ORDER</div>
+            <div class="instruction" id="staff-order">Awaiting AI coordination commands...</div>
+        </div>
+
+        <div class="card" id="queue-card">
+            <div class="card-header">PREDICTIVE QUEUE MGMT</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="wait-label" style="font-size: 1.2rem; font-weight: bold;">0 min</span>
+                <span id="wait-status" style="font-size: 0.7rem;">EST. WAIT</span>
+            </div>
+            <div class="wait-container">
+                <div class="bar-bg"><div id="queue-bar" class="bar-fill" style="width: 0%"></div></div>
+            </div>
+        </div>
+
+        <div class="card attendee-heat" id="heat-card">
+            <div class="card-header">ATTENDEE 'HEAT-AVOIDANCE' UI</div>
+            <div class="instruction" id="redirection-advice">Redirection logic offline. Click a sector to calculate flow.</div>
+        </div>
+
+        <div class="footer">
+            PROMPTWARS 2026 | SEAMLESS PHYSICAL EVENT EXPERIENCE ENGINE
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        // --- CONFIGURE YOUR MAPBOX TOKEN HERE ---
+        const MAPBOX_TOKEN = 'pk.eyJ1IidmFuc2hndXB0YSIsImEiOiJjbWo4cWRmc3YwM2V4M2ZzZmg2MnI0dWVnIn0.5mccqPSDsnTULMUyjzGE8g'; 
+
+        const map = L.map('map', { zoomControl: false }).setView([24.691, 76.877], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        map.on('click', async (e) => {
+            const coord = e.latlng.wrap();
+            const detectedCount = Math.floor(Math.random() * 100);
+
+            // Immediate UI feedback for scanning
+            document.getElementById('sector-id').innerText = "SCANNING...";
+            document.getElementById('staff-order').innerText = "Analyzing bottleneck patterns...";
+
+            try {
+                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coord.lng},${coord.lat}.json?access_token=${MAPBOX_TOKEN}`);
+                const data = await res.json();
+                const place = data.features?.[0]?.place_name || `Sector ${coord.lat.toFixed(3)}`;
+
+                // Emit to server for Gemini processing
+                socket.emit('analyze_crowd', { 
+                    location: place, 
+                    count: detectedCount 
+                });
+
+            } catch (err) {
+                console.error("Mapping error:", err);
+            }
+        });
+
+        socket.on('update_ui', (data) => {
+            // Update Sector Info
+            document.getElementById('sector-id').innerText = data.location.split(',')[0];
+            document.getElementById('count-num').innerText = data.count.toString().padStart(2, '0');
+            
+            // 1. Staff Dispatch Orders
+            document.getElementById('staff-order').innerText = data.staffOrder;
+
+            // 2. Predictive Queue Mgmt
+            const waitTime = Math.round(data.count / 3);
+            document.getElementById('wait-label').innerText = `${waitTime} min`;
+            document.getElementById('queue-bar').style.width = `${Math.min(data.count, 100)}%`;
+
+            // 3. Attendee Redirection (Heat Avoidance)
+            document.getElementById('redirection-advice').innerText = data.redirection;
+
+            // Alert States
+            const led = document.getElementById('led');
+            const scanCard = document.getElementById('scan-card');
+            
+            if (data.isCrowded) {
+                scanCard.classList.add('alert');
+                led.style.background = '#ef4444';
+                led.style.boxShadow = '0 0 10px #ef4444';
+            } else {
+                scanCard.classList.remove('alert');
+                led.style.background = '#22d3ee';
+                led.style.boxShadow = '0 0 10px #22d3ee';
+            }
+        });
+    </script>
+</body>
+</html>
