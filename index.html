@@ -3,132 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlowState | AI Crowd Orchestration</title>
+    <title>FlowState | PromptWars Physical Event Experience</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #0ea5e9;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-            --bg: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.7);
-            --border: rgba(226, 232, 240, 0.8);
+            --neon-cyan: #22d3ee;
+            --neon-red: #ef4444;
+            --neon-amber: #f59e0b;
+            --bg-dark: #020617;
+            --panel-dark: #0f172a;
         }
-
-        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
         body { 
             margin: 0; 
-            background: var(--bg); 
-            color: #1e293b; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-dark); 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
             display: flex; 
-            flex-direction: row;
             height: 100vh; 
             overflow: hidden; 
         }
 
-        /* --- MOBILE RESPONSIVENESS --- */
-        @media (max-width: 900px) {
-            body { flex-direction: column; overflow-y: auto; height: auto; }
-            #map { height: 50vh; width: 100% !important; flex: none !important; }
-            #panel { 
-                width: 100% !important; 
-                height: auto !important; 
-                border-left: none !important; 
-                border-top: 1px solid var(--border);
-                padding: 20px;
-                min-width: 0 !important;
-            }
+        #map { 
+            flex: 3; 
+            filter: brightness(0.6) contrast(1.2); 
+            cursor: crosshair; 
+            z-index: 1;
         }
 
-        #map { flex: 2.5; background: #e5e7eb; z-index: 1; }
-
+        /* Sidebar Panel */
         #panel { 
-            flex: 1; 
-            padding: 30px; 
-            background: var(--card-bg); 
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-left: 1px solid var(--border); 
+            flex: 1.2; 
+            padding: 25px; 
+            background: var(--panel-dark); 
+            border-left: 1px solid #1e293b; 
             display: flex; 
             flex-direction: column; 
-            min-width: 420px; 
+            min-width: 400px; 
             overflow-y: auto; 
-            box-shadow: -10px 0 50px rgba(0,0,0,0.04);
-            z-index: 2;
         }
 
-        /* Animations */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+        .header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 20px; 
         }
 
-        .card { animation: slideIn 0.5s ease out forwards; }
+        .live-indicator { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 0.7rem; 
+            letter-spacing: 1px; 
+            color: var(--neon-cyan); 
+        }
 
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .dot { 
+            width: 8px; 
+            height: 8px; 
+            background: var(--neon-cyan); 
+            border-radius: 50%; 
+            box-shadow: 0 0 10px var(--neon-cyan); 
+            animation: blink 1.5s infinite; 
+        }
         
-        .status-badge {
-            background: white;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--border);
-        }
+        h2 { margin: 0; font-size: 1.2rem; letter-spacing: 2px; }
 
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 12px var(--primary); animation: blink 1.5s infinite; }
-
-        h2 { margin: 0; font-size: 1.6rem; font-weight: 800; color: #0f172a; }
-
-        /* Modernized Cards */
+        /* Feature Cards */
         .card { 
-            background: white; 
-            padding: 24px; 
-            border-radius: 20px; 
-            border: 1px solid var(--border);
-            margin-bottom: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+            background: #1e293b; 
+            padding: 15px 20px; 
+            border-radius: 10px; 
+            border-left: 4px solid var(--neon-cyan); 
+            margin-bottom: 15px;
+            position: relative;
         }
 
-        .card:hover { transform: translateY(-3px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.06); }
-
-        .card-label { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 0.5px; }
+        .card-header { 
+            font-size: 0.7rem; 
+            color: #94a3b8; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-bottom: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+        }
         
-        .count-val { font-size: 3.5rem; font-weight: 800; color: #0f172a; line-height: 1; }
-        .count-unit { font-size: 0.9rem; color: #94a3b8; font-weight: 600; margin-left: 8px; }
-
-        .instruction-box { 
-            font-size: 1rem; 
-            color: #334155; 
-            line-height: 1.6; 
-            margin-top: 15px; 
-            padding-top: 15px;
-            border-top: 1px solid #f1f5f9;
+        .staff-dispatch { border-left-color: var(--neon-amber); background: #2a200a; }
+        .attendee-heat { border-left-color: #10b981; }
+        
+        .count-val { 
+            font-size: 2.5rem; 
+            font-weight: 800; 
+            color: var(--neon-cyan); 
+            font-family: monospace; 
         }
 
+        .instruction { 
+            font-size: 0.9rem; 
+            color: #e2e8f0; 
+            line-height: 1.4; 
+            margin-top: 10px; 
+            min-height: 40px; 
+        }
+        
         /* Progress Bar */
-        .progress-container { background: #f1f5f9; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 15px; }
-        .progress-bar { height: 100%; background: var(--primary); border-radius: 6px; width: 0%; }
+        .wait-container { margin-top: 10px; }
+        .bar-bg { background: #334155; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .bar-fill { height: 100%; background: var(--neon-cyan); transition: width 0.5s ease; }
 
-        /* Dynamic Classes */
-        .alert-card { border-left: 6px solid var(--danger); background: #fff1f2; }
-        .staff-card { border-left: 6px solid var(--warning); }
-        .redirect-card { border-left: 6px solid var(--success); }
+        /* Alert States */
+        .card.alert { border-left-color: var(--neon-red); }
+        .alert .count-val { color: var(--neon-red); }
+        .alert .bar-fill { background: var(--neon-red); }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        
-        .footer { margin-top: auto; font-size: 0.75rem; color: #94a3b8; text-align: center; padding-top: 40px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .footer { 
+            margin-top: auto; 
+            font-size: 10px; 
+            color: #475569; 
+            border-top: 1px solid #1e293b; 
+            padding-top: 10px; 
+        }
+
+        /* --- RESPONSIVE MEDIA QUERIES --- */
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+                height: auto;
+            }
+
+            #map {
+                flex: none;
+                height: 45vh; /* Map occupies top half */
+                width: 100%;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                border-bottom: 2px solid var(--neon-cyan);
+            }
+
+            #panel {
+                flex: none;
+                min-width: 0;
+                width: 100%;
+                padding: 20px;
+                box-sizing: border-box;
+                overflow-y: visible;
+                border-left: none;
+            }
+
+            .count-val {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -137,48 +174,39 @@
 
     <div id="panel">
         <div class="header">
-            <div>
-                <h2>FlowState</h2>
-                <p style="margin: 0; font-size: 0.85rem; color: #64748b;">AI Crowd Intelligence System</p>
-            </div>
-            <div class="status-badge">
-                <div class="dot" id="led"></div> <span>Live</span>
-            </div>
+            <h2>FLOWSTATE: CORE</h2>
+            <div class="live-indicator"><div class="dot" id="led"></div> LIVE FEED</div>
         </div>
 
         <div id="scan-card" class="card">
-            <span class="card-label">Computer Vision Analysis</span>
-            <div style="display: flex; align-items: baseline;">
-                <span class="count-val" id="count-num">00</span>
-                <span class="count-unit">detected agents</span>
-            </div>
-            <p id="sector-id" style="font-size: 0.8rem; color: #64748b; margin-top: 8px; font-weight: 600;">Sector: Standby</p>
+            <div class="card-header">CV SECTOR ANALYSIS <span id="sector-id">READY</span></div>
+            <div class="count-val" id="count-num">00</div>
+            <div style="font-size: 0.7rem; color: #64748b;">TOTAL OBJECTS DETECTED</div>
         </div>
 
-        <div class="card staff-card">
-            <span class="card-label">Ground Coordination</span>
-            <div class="instruction-box" id="staff-order">
-                Select a coordinate on the map to deploy AI logic.
+        <div class="card staff-dispatch" id="staff-card">
+            <div class="card-header">STAFF DISPATCH: TACTICAL ORDER</div>
+            <div class="instruction" id="staff-order">Awaiting AI coordination commands...</div>
+        </div>
+
+        <div class="card" id="queue-card">
+            <div class="card-header">PREDICTIVE QUEUE MGMT</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="wait-label" style="font-size: 1.2rem; font-weight: bold;">0 min</span>
+                <span id="wait-status" style="font-size: 0.7rem;">EST. WAIT</span>
+            </div>
+            <div class="wait-container">
+                <div class="bar-bg"><div id="queue-bar" class="bar-fill" style="width: 0%"></div></div>
             </div>
         </div>
 
-        <div class="card">
-            <span class="card-label">Predictive Congestion</span>
-            <div id="wait-label" style="font-size: 1.6rem; font-weight: 800;">0 min wait</div>
-            <div class="progress-container">
-                <div id="queue-bar" class="progress-bar"></div>
-            </div>
-        </div>
-
-        <div class="card redirect-card">
-            <span class="card-label">Flow Optimization</span>
-            <div class="instruction-box" id="redirection-advice">
-                Click map to calculate optimal redirection paths.
-            </div>
+        <div class="card attendee-heat" id="heat-card">
+            <div class="card-header">ATTENDEE 'HEAT-AVOIDANCE' UI</div>
+            <div class="instruction" id="redirection-advice">Redirection logic offline. Click a sector to calculate flow.</div>
         </div>
 
         <div class="footer">
-            PROMPTWARS 2026 | SEAMLESS EVENT ENGINE
+            PROMPTWARS 2026 | SEAMLESS PHYSICAL EVENT EXPERIENCE ENGINE
         </div>
     </div>
 
@@ -186,71 +214,70 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let map;
+        
+        // --- MAPBOX CONFIG ---
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoidmFuc2hndXB0YSIsImEiOiJjbWo4cWRmc3YwM2V4M2ZzZmg2MnI0dWVnIn0.5mccqPSDsnTULMUyjzGE8g'; 
 
-        async function initApp() {
+        const map = L.map('map', { 
+            zoomControl: false,
+            // Optimization: allow scroll zoom but prevent accidental swipes on mobile
+            scrollWheelZoom: true,
+            dragging: !L.Browser.mobile, 
+            tap: !L.Browser.mobile 
+        }).setView([24.691, 76.877], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Map Click Interaction
+        map.on('click', async (e) => {
+            const coord = e.latlng.wrap();
+            const detectedCount = Math.floor(Math.random() * 100);
+
+            document.getElementById('sector-id').innerText = "SCANNING...";
+            document.getElementById('staff-order').innerText = "Analyzing bottleneck patterns...";
+
             try {
-                const response = await fetch('/config');
-                const config = await response.json();
-                
-                // Initialize Map
-                map = L.map('map', { zoomControl: false }).setView([24.691, 76.877], 15);
-                
-                // Use a modern, colorful Mapbox style
-                L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${config.mapboxToken}`, {
-                    attribution: '© Mapbox'
-                }).addTo(map);
+                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coord.lng},${coord.lat}.json?access_token=${MAPBOX_TOKEN}`);
+                const data = await res.json();
+                const place = data.features?.[0]?.place_name || `Sector ${coord.lat.toFixed(3)}`;
 
-                map.on('click', async (e) => {
-                    const coord = e.latlng.wrap();
-                    const detectedCount = Math.floor(Math.random() * 95) + 5; // Simulating detection
-
-                    // Immediate UI Loading State
-                    document.getElementById('staff-order').innerText = "Gemini AI is processing sector data...";
-                    document.getElementById('redirection-advice').innerText = "Calculating grid flow...";
-
-                    // Get Location Name
-                    const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coord.lng},${coord.lat}.json?access_token=${config.mapboxToken}`);
-                    const data = await res.json();
-                    const place = data.features?.[0]?.place_name.split(',')[0] || "Active Sector";
-
-                    // Send to Server for AI Analysis
-                    socket.emit('analyze_crowd', { location: place, count: detectedCount });
+                socket.emit('analyze_crowd', { 
+                    location: place, 
+                    count: detectedCount 
                 });
 
-            } catch (err) { console.error("Initialization error:", err); }
-        }
-
-        // Handle AI Response
-        socket.on('update_ui', (data) => {
-            const clean = (t) => t ? t.replace(/[\*\#]/g, '') : "Processing...";
-            
-            document.getElementById('sector-id').innerText = `Target: ${data.location}`;
-            document.getElementById('count-num').innerText = data.count.toString().padStart(2, '0');
-            document.getElementById('staff-order').innerText = clean(data.staffOrder);
-            document.getElementById('redirection-advice').innerText = clean(data.redirection);
-
-            // Calculation for Queue
-            const waitTime = Math.round(data.count / 3.5);
-            document.getElementById('wait-label').innerText = `${waitTime} Minutes`;
-            document.getElementById('queue-bar').style.width = `${Math.min(data.count, 100)}%`;
-
-            // UI Alert Logic
-            const scanCard = document.getElementById('scan-card');
-            const led = document.getElementById('led');
-            
-            if (data.isCrowded) {
-                scanCard.classList.add('alert-card');
-                led.style.background = 'var(--danger)';
-                led.style.boxShadow = '0 0 12px var(--danger)';
-            } else {
-                scanCard.classList.remove('alert-card');
-                led.style.background = 'var(--primary)';
-                led.style.boxShadow = '0 0 12px var(--primary)';
+            } catch (err) {
+                console.error("Mapping error:", err);
             }
         });
 
-        initApp();
+        // Socket Listener
+        socket.on('update_ui', (data) => {
+            document.getElementById('sector-id').innerText = data.location.split(',')[0];
+            document.getElementById('count-num').innerText = data.count.toString().padStart(2, '0');
+            document.getElementById('staff-order').innerText = data.staffOrder;
+
+            const waitTime = Math.round(data.count / 3);
+            document.getElementById('wait-label').innerText = `${waitTime} min`;
+            document.getElementById('queue-bar').style.width = `${Math.min(data.count, 100)}%`;
+            document.getElementById('redirection-advice').innerText = data.redirection;
+
+            const led = document.getElementById('led');
+            const scanCard = document.getElementById('scan-card');
+            
+            if (data.isCrowded) {
+                scanCard.classList.add('alert');
+                led.style.background = '#ef4444';
+                led.style.boxShadow = '0 0 10px #ef4444';
+            } else {
+                scanCard.classList.remove('alert');
+                led.style.background = '#22d3ee';
+                led.style.boxShadow = '0 0 10px #22d3ee';
+            }
+        });
+
+        // Re-enable dragging if user taps map (helps mobile usability)
+        map.on('mousedown', () => { map.dragging.enable(); });
     </script>
 </body>
 </html>
