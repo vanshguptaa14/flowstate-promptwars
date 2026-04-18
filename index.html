@@ -10,21 +10,23 @@
     
     <style>
         :root {
-            --primary: #0ea5e9;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
+            --primary: #0369a1; /* Darker blue for 4.5:1 contrast */
+            --danger: #b91c1c;  /* Darker red for safety compliance */
+            --warning: #a16207; /* Darker gold/brown for legibility */
+            --success: #15803d; /* Forest green */
             --bg: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --border: rgba(226, 232, 240, 0.8);
+            --text-main: #0f172a;
+            --text-muted: #334155; /* Meets contrast ratio requirements */
+            --card-bg: #ffffff;
+            --border: #cbd5e1; /* Darker border for structural clarity */
         }
 
-        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        * { box-sizing: border-box; transition: all 0.2s ease-in-out; }
 
         body { 
             margin: 0; 
             background: var(--bg); 
-            color: #1e293b; 
+            color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             display: flex; 
             flex-direction: row;
@@ -32,26 +34,19 @@
             overflow: hidden; 
         }
 
-        /* Accessibility: Navigation flow and responsiveness fix */
         @media (max-width: 900px) {
             body { flex-direction: column; overflow-y: auto; height: auto; }
-            #map { height: 45vh; width: 100% !important; flex: none !important; position: sticky; top: 0; }
-            #panel { 
-                width: 100% !important; 
-                border-left: none !important; 
-                border-top: 2px solid var(--border);
-                min-width: 0 !important;
-            }
+            #map { height: 45vh; width: 100% !important; flex: none !important; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border); }
+            #panel { width: 100% !important; min-width: 0 !important; border-left: none; }
         }
 
-        #map { flex: 2.5; background: #e5e7eb; z-index: 1; }
+        #map { flex: 2.5; background: #cbd5e1; z-index: 1; outline: none; }
 
         #panel { 
             flex: 1; 
             padding: 30px; 
             background: var(--card-bg); 
-            backdrop-filter: blur(20px);
-            border-left: 1px solid var(--border); 
+            border-left: 2px solid var(--border); 
             display: flex; 
             flex-direction: column; 
             min-width: 420px; 
@@ -59,190 +54,186 @@
             z-index: 2;
         }
 
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         
         .status-badge {
-            background: white;
+            background: #f1f5f9;
             padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
+            border-radius: 8px;
+            font-size: 0.75rem;
             font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             border: 1px solid var(--border);
+            color: var(--text-main);
         }
 
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 12px var(--primary); animation: blink 1.5s infinite; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); animation: blink 2s infinite; }
 
-        h1 { margin: 0; font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+        h1 { margin: 0; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.025em; }
 
         .card { 
             background: white; 
             padding: 24px; 
-            border-radius: 20px; 
-            border: 1px solid var(--border);
+            border-radius: 12px; 
+            border: 2px solid var(--border);
             margin-bottom: 20px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
         }
 
-        .card-label { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; display: block; }
+        .card-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 10px; display: block; letter-spacing: 0.05em; }
         
-        .count-val { font-size: 3.5rem; font-weight: 800; color: #0f172a; line-height: 1; }
-        .count-unit { font-size: 0.9rem; color: #94a3b8; font-weight: 600; margin-left: 8px; }
+        .count-val { font-size: 3.5rem; font-weight: 800; line-height: 1; color: var(--text-main); }
+        .count-unit { font-size: 1rem; color: var(--text-muted); font-weight: 600; margin-left: 8px; }
 
-        .instruction-box { 
-            font-size: 1rem; 
-            color: #334155; 
-            line-height: 1.6; 
-            margin-top: 15px; 
-            padding-top: 15px;
-            border-top: 1px solid #f1f5f9;
-        }
+        #sector-id { font-size: 0.9rem; color: var(--text-main); font-weight: 700; margin-top: 12px; }
 
-        .progress-container { background: #f1f5f9; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 15px; }
+        .instruction-box { font-size: 1rem; line-height: 1.6; color: var(--text-main); margin-top: 10px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); }
+
+        .progress-container { background: #e2e8f0; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 15px; border: 1px solid var(--border); }
         .progress-bar { height: 100%; background: var(--primary); width: 0%; }
 
-        .alert-card { border-left: 6px solid var(--danger); background: #fff1f2; }
-        .staff-card { border-left: 6px solid var(--warning); }
-        .redirect-card { border-left: 6px solid var(--success); }
+        .alert-card { border-left: 8px solid var(--danger); background: #fef2f2; border-color: var(--danger); }
+        .staff-card { border-left: 8px solid var(--warning); border-color: var(--warning); }
+        .redirect-card { border-left: 8px solid var(--success); border-color: var(--success); }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        footer { margin-top: auto; font-size: 0.8rem; color: var(--text-muted); text-align: center; padding-top: 30px; font-weight: 600; }
         
-        footer { margin-top: auto; font-size: 0.75rem; color: #94a3b8; text-align: center; padding-top: 40px; }
+        /* Interactive focus state for map elements */
+        .leaflet-marker-icon:focus { outline: 3px solid var(--primary); border-radius: 50%; }
     </style>
 </head>
 <body>
 
-    <section id="map" role="region" aria-label="Crowd Density Map"></section>
+<section id="map" role="application" aria-label="Interactive Stadium Crowd Map. Click any sector to analyze density."></section>
 
-    <main id="panel">
-        <header class="header">
-            <div>
-                <h1>FlowState</h1>
-                <p style="margin: 0; font-size: 0.85rem; color: #64748b;">AI Crowd Intelligence System</p>
-            </div>
-            <div class="status-badge" role="status" aria-live="polite">
-                <div class="dot" id="led"></div> <span>Live Feed</span>
-            </div>
-        </header>
+<main id="panel" aria-labelledby="dashboard-title">
+    <header class="header">
+        <div>
+            <h1 id="dashboard-title">FlowState</h1>
+            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">Tactical AI Intelligence</p>
+        </div>
+        <div class="status-badge" role="status" aria-live="polite">
+            <div class="dot" id="led" aria-hidden="true"></div> 
+            <span id="status-text">System Active</span>
+        </div>
+    </header>
 
-        <article id="scan-card" class="card" aria-labelledby="scan-heading">
-            <span class="card-label" id="scan-heading">CV Analysis</span>
-            <div style="display: flex; align-items: baseline;">
-                <span class="count-val" id="count-num">00</span>
-                <span class="count-unit">detected agents</span>
-            </div>
-            <p id="sector-id" style="font-size: 0.8rem; color: #64748b; margin-top: 8px; font-weight: 600;">Sector: Standby</p>
-        </article>
+    <article id="scan-card" class="card" aria-live="polite">
+        <span class="card-label">Computer Vision Feed</span>
+        <div style="display: flex; align-items: baseline;">
+            <span class="count-val" id="count-num">00</span>
+            <span class="count-unit" aria-label="Detected people in this sector">Detected Agents</span>
+        </div>
+        <p id="sector-id">Status: Awaiting Input</p>
+    </article>
 
-        <section class="card staff-card" aria-labelledby="coord-heading">
-            <span class="card-label" id="coord-heading">Ground Coordination</span>
-            <div class="instruction-box" id="staff-order">
-                Select a coordinate on the map to deploy AI logic.
-            </div>
-        </section>
+    <section class="card staff-card">
+        <span class="card-label">Ground Operations</span>
+        <div id="staff-order" class="instruction-box">Select a map sector to generate tactical AI instructions.</div>
+    </section>
 
-        <section class="card" aria-labelledby="predictive-heading">
-            <span class="card-label" id="predictive-heading">Predictive Congestion</span>
-            <div id="wait-label" style="font-size: 1.6rem; font-weight: 800;">0 min wait</div>
-            <div class="progress-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                <div id="queue-bar" class="progress-bar"></div>
-            </div>
-        </section>
+    <section class="card" aria-labelledby="wait-header">
+        <span class="card-label" id="wait-header">Congestion Metric</span>
+        <div id="wait-label" style="font-size: 1.75rem; font-weight: 800;">0 min wait</div>
+        <div class="progress-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-parent">
+            <div id="queue-bar" class="progress-bar" aria-label="Crowd density percentage"></div>
+        </div>
+    </section>
 
-        <section class="card redirect-card" aria-labelledby="flow-heading">
-            <span class="card-label" id="flow-heading">Flow Optimization</span>
-            <div class="instruction-box" id="redirection-advice">
-                Click map to calculate optimal redirection paths.
-            </div>
-        </section>
+    <section class="card redirect-card">
+        <span class="card-label">Flow Optimization</span>
+        <div id="redirection-advice" class="instruction-box">Real-time alternate route guidance will appear here.</div>
+    </section>
 
-        <footer>
-            PROMPTWARS 2026 | SEAMLESS EVENT ENGINE
-        </footer>
-    </main>
+    <footer>PROMPTWARS 2026 | MISSION CRITICAL</footer>
+</main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 
-        const socket = io();
-        let map;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-        async function initApp() {
-            try {
-                // SECURITY: Get config from server to avoid hardcoding keys
-                const response = await fetch('/config');
-                const serverConfig = await response.json();
-                
-                // Initialize Firebase for Analytics/Frontend
-                // Note: We only use non-sensitive IDs here if needed for tracking
-                const firebaseConfig = {
-                    apiKey: "AIzaSyA6wTYZ_t7dXDzS98CXp9tvAvbNtLQS9L8",
-                    authDomain: "flowstate-e6622.firebaseapp.com",
-                    projectId: "flowstate-e6622",
-                    appId: "1:621937796030:web:8bae7a08f710cfcd088fef"
-                };
-                const app = initializeApp(firebaseConfig);
-                const analytics = getAnalytics(app);
+const socket = io();
+let map;
 
-                // Map Initialization
-                map = L.map('map', { zoomControl: false }).setView([24.691, 76.877], 15);
-                L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${serverConfig.mapboxToken}`, {
-                    attribution: '© Mapbox'
-                }).addTo(map);
+async function initApp() {
+    try {
+        const response = await fetch('/config');
+        const serverConfig = await response.json();
 
-                map.on('click', async (e) => {
-                    const coord = e.latlng.wrap();
-                    const detectedCount = Math.floor(Math.random() * 95) + 5;
+        if (!serverConfig.firebaseConfig) throw new Error("Config delivery failed");
 
-                    document.getElementById('staff-order').innerText = "Gemini AI is processing sector data...";
-                    
-                    const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coord.lng},${coord.lat}.json?access_token=${serverConfig.mapboxToken}`);
-                    const data = await res.json();
-                    const place = data.features?.[0]?.place_name.split(',')[0] || "Active Sector";
+        const app = initializeApp(serverConfig.firebaseConfig);
+        getAnalytics(app);
 
-                    // Emission to server (which handles Firestore logging)
-                    socket.emit('analyze_crowd', { location: place.replace(/[<>]/g, ""), count: detectedCount });
-                });
+        // Accessibility Fix: Disable keyboard dragging if it interferes, but keep zoom accessible
+        map = L.map('map', { 
+            zoomControl: true,
+            keyboard: true 
+        }).setView([24.691, 76.877], 15);
 
-            } catch (err) { console.error("Initialization error:", err); }
-        }
+        L.tileLayer(
+            `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${serverConfig.mapboxToken}`,
+            { attribution: '© Mapbox' }
+        ).addTo(map);
 
-        socket.on('update_ui', (data) => {
-            const cleanText = (t) => t ? t.replace(/[\*\#]/g, '') : "Processing...";
+        map.on('click', async (e) => {
+            const coord = e.latlng.wrap();
+            document.getElementById('staff-order').innerText = "Processing Sector Intelligence...";
             
-            document.getElementById('sector-id').innerText = `Target: ${data.location}`;
-            document.getElementById('count-num').innerText = data.count.toString().padStart(2, '0');
-            document.getElementById('staff-order').innerText = cleanText(data.staffOrder);
-            document.getElementById('redirection-advice').innerText = cleanText(data.redirection);
+            const res = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${coord.lng},${coord.lat}.json?access_token=${serverConfig.mapboxToken}`
+            );
+            const data = await res.json();
+            const place = data.features?.[0]?.text || "Tactical Sector";
 
-            const waitTime = Math.round(data.count / 3.5);
-            document.getElementById('wait-label').innerText = `${waitTime} Minutes`;
-            
-            const progressBar = document.getElementById('queue-bar');
-            const progressValue = Math.min(data.count, 100);
-            progressBar.style.width = `${progressValue}%`;
-            progressBar.parentElement.setAttribute('aria-valuenow', progressValue);
-
-            const scanCard = document.getElementById('scan-card');
-            const led = document.getElementById('led');
-            
-            if (data.isCrowded) {
-                scanCard.classList.add('alert-card');
-                led.style.background = 'var(--danger)';
-            } else {
-                scanCard.classList.remove('alert-card');
-                led.style.background = 'var(--primary)';
-            }
+            socket.emit('analyze_crowd', {
+                location: place,
+                count: Math.floor(Math.random() * 90) + 10 
+            });
         });
 
-        initApp();
-    </script>
+    } catch (err) {
+        console.error("Initialization failure:", err);
+    }
+}
+
+socket.on('update_ui', (data) => {
+    // Accessibility Fix: Pad numbers for consistent speech patterns
+    document.getElementById('count-num').innerText = data.count.toString().padStart(2, '0');
+    document.getElementById('sector-id').innerText = `Location: ${data.location}`;
+    document.getElementById('staff-order').innerText = data.staffOrder;
+    document.getElementById('redirection-advice').innerText = data.redirection;
+
+    const waitTime = Math.round(data.count / 3.2);
+    document.getElementById('wait-label').innerText = `${waitTime} Minutes`;
+    
+    // Accessibility Fix: Update progressbar ARIA values dynamically
+    const bar = document.getElementById('queue-bar');
+    const parent = document.getElementById('progress-parent');
+    const percent = Math.min(data.count, 100);
+    bar.style.width = `${percent}%`;
+    parent.setAttribute('aria-valuenow', percent);
+
+    const scanCard = document.getElementById('scan-card');
+    const statusText = document.getElementById('status-text');
+    if (data.isCrowded) {
+        scanCard.classList.add('alert-card');
+        statusText.innerText = "CROWD ALERT";
+        statusText.style.color = "var(--danger)";
+    } else {
+        scanCard.classList.remove('alert-card');
+        statusText.innerText = "System Normal";
+        statusText.style.color = "var(--text-main)";
+    }
+});
+
+initApp();
+</script>
+
 </body>
 </html>
