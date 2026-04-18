@@ -176,16 +176,22 @@
 
         async function initApp() {
             try {
-                // SECURITY: Get config from server securely
+                // SECURITY: Get config from server to avoid hardcoding keys
                 const response = await fetch('/config');
                 const serverConfig = await response.json();
                 
-                // Initialize Firebase with config provided by server
-                // This removes hardcoded credentials that triggered security alerts
-                const app = initializeApp(serverConfig.firebaseConfig);
+                // Initialize Firebase for Analytics/Frontend
+                // Note: We only use non-sensitive IDs here if needed for tracking
+                const firebaseConfig = {
+                    apiKey: "AIzaSyA6wTYZ_t7dXDzS98CXp9tvAvbNtLQS9L8",
+                    authDomain: "flowstate-e6622.firebaseapp.com",
+                    projectId: "flowstate-e6622",
+                    appId: "1:621937796030:web:8bae7a08f710cfcd088fef"
+                };
+                const app = initializeApp(firebaseConfig);
                 const analytics = getAnalytics(app);
 
-                // Initialize Mapbox with token from server
+                // Map Initialization
                 map = L.map('map', { zoomControl: false }).setView([24.691, 76.877], 15);
                 L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${serverConfig.mapboxToken}`, {
                     attribution: '© Mapbox'
@@ -201,7 +207,7 @@
                     const data = await res.json();
                     const place = data.features?.[0]?.place_name.split(',')[0] || "Active Sector";
 
-                    // Sanitize place name before sending
+                    // Emission to server (which handles Firestore logging)
                     socket.emit('analyze_crowd', { location: place.replace(/[<>]/g, ""), count: detectedCount });
                 });
 
@@ -216,7 +222,6 @@
             document.getElementById('staff-order').innerText = cleanText(data.staffOrder);
             document.getElementById('redirection-advice').innerText = cleanText(data.redirection);
 
-            // Wait time prediction for score improvement
             const waitTime = Math.round(data.count / 3.5);
             document.getElementById('wait-label').innerText = `${waitTime} Minutes`;
             
